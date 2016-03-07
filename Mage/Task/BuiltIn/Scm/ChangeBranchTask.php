@@ -77,6 +77,8 @@ class ChangeBranchTask extends AbstractTask
 
                     $scmData = $this->getConfig()->deployment('scm', false);
 
+                    self::$startingBranch = $currentBranch;
+                    
                     if ($result && is_array($scmData) && isset($scmData['branch']) && $scmData['branch'] != $currentBranch) {
                         $command = 'git branch | grep \'' . $scmData['branch'] . '\' | tr -s \' \' | sed \'s/^[ ]//g\'';
                         $isBranchTracked = '';
@@ -89,8 +91,6 @@ class ChangeBranchTask extends AbstractTask
                         $branch = $this->getParameter('branch', $scmData['branch']);
                         $command = 'git checkout ' . $branch;
                         $result = $this->runCommandLocal($command) && $result;
-
-                        self::$startingBranch = $currentBranch;
                     } else {
                         throw new SkipException;
                     }
