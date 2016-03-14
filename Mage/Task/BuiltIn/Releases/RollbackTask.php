@@ -61,12 +61,11 @@ class RollbackTask extends AbstractTask implements IsReleaseAware
 
             if (count($releases) == 0) {
                 Console::output('Release are not available for <bold>' . $this->getConfig()->getHost() . '</bold> ... <red>FAIL</red>');
-
             } else {
                 rsort($releases);
                 $deleteCurrent = $this->getConfig()->getParameter('deleteCurrent',
                     $this->getConfig()->deployment('delete-on-rollback',
-                        $this->getConfig()->general('delete-on-rollback',false)
+                        $this->getConfig()->general('delete-on-rollback', false)
                     )
                 );
 
@@ -74,8 +73,7 @@ class RollbackTask extends AbstractTask implements IsReleaseAware
                 if ($this->getReleaseId() == '') {
                     $releaseId = $releases[0];
                     $releaseIsAvailable = true;
-
-                } else if ($this->getReleaseId() <= 0) {
+                } elseif ($this->getReleaseId() <= 0) {
                     $index = $this->getReleaseId() * -1;
                     if (isset($releases[$index])) {
                         $releaseId = $releases[$index];
@@ -88,9 +86,10 @@ class RollbackTask extends AbstractTask implements IsReleaseAware
                     }
                 }
 
+                $currentCopy = rtrim($releasesDirectory, '/') . '/' . $releaseId;
+
                 if (!$releaseIsAvailable) {
                     Console::output('Release <bold>' . $this->getReleaseId() . '</bold> is invalid or unavailable for <bold>' . $this->getConfig()->getHost() . '</bold> ... <red>FAIL</red>');
-
                 } else {
                     Console::output('Rollback release on <bold>' . $this->getConfig()->getHost() . '</bold>');
                     $rollbackTo = $releasesDirectory . '/' . $releaseId;
@@ -114,7 +113,7 @@ class RollbackTask extends AbstractTask implements IsReleaseAware
                         $task->init();
                         Console::output('Running <purple>' . $task->getName() . '</purple> ... ', 2, false);
 
-                        if ($task instanceOf RollbackAware) {
+                        if ($task instanceof RollbackAware) {
                             /* @var $task AbstractTask */
                             $tasks++;
                             $result = $task->run();
@@ -136,14 +135,12 @@ class RollbackTask extends AbstractTask implements IsReleaseAware
                     $userGroup = '';
                     $resultFetch = $this->runCommandRemote('ls -ld ' . $rollbackTo . ' | awk \'{print \$3":"\$4}\'', $userGroup);
 
-                    $tmplink = $rollbackTo . '.tmp';
-                    $command = 'ln -sfn ' . $currentCopy . ' ' . $tmplink
-                             . ' && '
-                             . 'mv -T ' . $tmplink . ' ' . $symlink;
-
-                    if ($resultFetch) {
-                        $command .= ' && chown -h ' . $userGroup . ' ' . $symlink;
+                    $tmplink = $symlink . '.tmp';
+                    $command = "ln -sfn {$currentCopy} {$tmplink}";
+                    if ($resultFetch && $userGroup) {
+                        $command .= " && chown -h {$userGroup} ${tmplink}";
                     }
+                    $command .= " && mv -T {$tmplink} {$symlink}";
 
                     $result = $this->runCommandRemote($command);
 
@@ -166,7 +163,7 @@ class RollbackTask extends AbstractTask implements IsReleaseAware
                         $task->init();
                         Console::output('Running <purple>' . $task->getName() . '</purple> ... ', 2, false);
 
-                        if ($task instanceOf RollbackAware) {
+                        if ($task instanceof RollbackAware) {
                             /* @var $task AbstractTask */
                             $tasks++;
                             $result = $task->run();
@@ -193,7 +190,6 @@ class RollbackTask extends AbstractTask implements IsReleaseAware
             }
 
             return $result;
-
         } else {
             return false;
         }

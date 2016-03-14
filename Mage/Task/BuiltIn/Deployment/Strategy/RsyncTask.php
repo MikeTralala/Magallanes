@@ -73,7 +73,7 @@ class RsyncTask extends BaseStrategyTaskAbstract implements IsReleaseAware
                 // rsync: { copy: yes }
                 $rsync_copy = $this->getConfig()->deployment('rsync');
                 // If copy_tool_rsync, use rsync rather than cp for finer control of what is copied
-                if ($rsync_copy && is_array($rsync_copy) && $rsync_copy['copy'] && is_dir("$releasesDirectory/$currentRelease")) {
+                if ($rsync_copy && is_array($rsync_copy) && $rsync_copy['copy'] && $this->runCommandRemote('test -d ' . $releasesDirectory . '/' . $currentRelease)) {
                     if (isset($rsync_copy['copy_tool_rsync'])) {
                         $this->runCommandRemote("rsync -a {$this->excludes(array_merge($excludes, $rsync_copy['rsync_excludes']))} "
                                           . "$releasesDirectory/$currentRelease/ $releasesDirectory/{$this->getConfig()->getReleaseId()}");
@@ -100,7 +100,9 @@ class RsyncTask extends BaseStrategyTaskAbstract implements IsReleaseAware
                  . $this->excludes($excludes) . ' '
                  . $this->excludesListFile($excludesListFilePath) . ' '
                  . $this->getConfig()->deployment('from') . ' '
-                 . $this->getConfig()->deployment('user') . '@' . $this->getConfig()->getHostName() . ':' . $deployToDirectory;
+                 . ($this->getConfig()->deployment('user') ? $this->getConfig()->deployment('user') . '@' : '')
+                 . $this->getConfig()->getHostName() . ':' . $deployToDirectory;
+
         $result = $this->runCommandLocal($command);
 
         return $result;
@@ -130,7 +132,7 @@ class RsyncTask extends BaseStrategyTaskAbstract implements IsReleaseAware
     protected function excludesListFile($excludesFile)
     {
         $excludesListFileRsync = '';
-        if(!empty($excludesFile) && file_exists($excludesFile) && is_file($excludesFile) && is_readable($excludesFile)) {
+        if (!empty($excludesFile) && file_exists($excludesFile) && is_file($excludesFile) && is_readable($excludesFile)) {
             $excludesListFileRsync = ' --exclude-from=' . $excludesFile;
         }
         return $excludesListFileRsync;

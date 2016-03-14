@@ -11,7 +11,7 @@
 namespace Mage\Task;
 
 use Mage\Config;
-
+use Mage\Task\AbstractTask;
 use Exception;
 
 /**
@@ -26,11 +26,10 @@ class Factory
      *
      * @param string|array $taskData
      * @param \Mage\Config $taskConfig
-     * @param Config $taskConfig
      * @param boolean $inRollback
      * @param string $stage
      * @return \Mage\Task\AbstractTask
-     * @throws \Exception|\Mage\Task\ErrorWithMessageException
+     * @throws \Exception
      */
     public static function get($taskData, Config $taskConfig, $inRollback = false, $stage = null)
     {
@@ -48,7 +47,6 @@ class Factory
 
         if (strpos($taskName, '/') === false) {
             $className = 'Task\\' . $taskName;
-
         } else {
             $className = 'Mage\\Task\\BuiltIn\\' . str_replace(' ', '\\', ucwords(str_replace('/', ' ', $taskName))) . 'Task';
         }
